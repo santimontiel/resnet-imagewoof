@@ -1,3 +1,7 @@
+# -- REPO-SPECIFIC IGNORES.
+results/
+
+# -- ORIGINAL PYTHON TEMPLATE (by GitHub).
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
