@@ -1,7 +1,9 @@
 # Image Classification with ResNet on ImageWoof. 🐕
 (Header image WIP)
+
 A Deep Learning multi-class classification project using ResNet family and ImageWoof dataset.
-<p align="center">***by [Santiago Montiel Marín](https://www.santimontiel.eu/)***.</p>
+
+<p align="center"><b>by <a href="https://www.santimontiel.eu/">Santiago Montiel Marín</a>.</b></p>
 
 * What was the motivation behind this project?
 * Why did I build this project?
