@@ -26,16 +26,21 @@ from utils.engine import train_step, test_step
 from utils.dataset import image_woof_train_dataloader, image_woof_test_dataloader
 from utils.visualize import Colors as c
 from utils.visualize import plot_metrics
+from utils.checkpoints import BestAndLastCheckpoints
 
 
 def run(model: torch.nn.Module,
         train_dataloader: torch.utils.data.DataLoader,
         test_dataloader: torch.utils.data.DataLoader,
         optimizer: torch.optim.Optimizer,
+        scheduler: torch.optim.lr_scheduler._LRScheduler,
         loss_fn: torch.nn.Module,
         device: str,
         epochs: int = 10,
 ):
+
+    # Class to keep track of best and last model.
+    ckpts = BestAndLastCheckpoints(model, optimizer)
 
     # Dictionary to keep track of metrics and losses.
     results = {
@@ -59,6 +64,7 @@ def run(model: torch.nn.Module,
             dataloader=train_dataloader,
             loss_fn=loss_fn,
             optimizer=optimizer,
+            scheduler=scheduler,
             device=device,
         )
 
@@ -73,13 +79,16 @@ def run(model: torch.nn.Module,
         # Print the results of this epoch.
         tqdm.write(f"Epoch: {str(epoch).zfill(2)} | Train loss: {train_loss:.4f} | Train acc: {train_acc:.4f} | Test loss: {test_loss:.4f} | Test acc: {test_acc:.4f}")
 
+        # Update the best and last model class.
+        ckpts.step(epoch, test_loss, model, optimizer)
+
         # Update the results tracking dictionary.
         results["train_loss"].append(train_loss)
         results["train_acc"].append(train_acc)
         results["test_loss"].append(test_loss)
         results["test_acc"].append(test_acc)
 
-    return results
+    return results, ckpts
 
 def main():
 
@@ -94,6 +103,7 @@ def main():
     train_transforms = transforms.Compose([
         transforms.Resize(size=cfg["IMG_SIZE"]),
         transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomVerticalFlip(p=0.5),
         transforms.ToTensor(),
     ])
 
@@ -124,10 +134,11 @@ def main():
 
     # Let's train!
     start_time = timer()
-    results = run(model=model,
+    (results, ckpts) = run(model=model,
                 train_dataloader=train_dataloader,
                 test_dataloader=test_dataloader,
                 optimizer=optimizer,
+                scheduler=scheduler,
                 loss_fn=loss_fn,
                 epochs=cfg["NUM_EPOCHS"],
                 device=DEVICE,
@@ -151,6 +162,12 @@ def main():
         day=f"{str(date.day).zfill(2)}/{str(date.month).zfill(2)}/{date.year}",
         hour=f"{str(date.hour).zfill(2)}:{str(date.minute).zfill(2)}")
     res_df = pd.DataFrame(results).to_csv(f"{res_dir}/results.csv")
+
+    # Save the last and the best weights.
+    ckpts_dir = (Path().cwd() / "weights" / f"run_{day}_{hour}_train")
+    ckpts_dir.mkdir(parents=True, exist_ok=True)
+    ckpts.save(path=ckpts_dir)
+
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,6 @@
 # -- REPO-SPECIFIC IGNORES.
 results/
+weights/
 
 # -- ORIGINAL PYTHON TEMPLATE (by GitHub).
 # Byte-compiled / optimized / DLL files

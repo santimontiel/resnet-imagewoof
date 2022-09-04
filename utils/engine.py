@@ -1,10 +1,13 @@
 import torch
 from tqdm.auto import tqdm
 
+# @TODO: Training engine.
+
 def train_step(model: torch.nn.Module,
                dataloader: torch.utils.data.DataLoader,
                loss_fn: torch.nn.Module,
                optimizer: torch.optim.Optimizer,
+               scheduler: torch.optim.lr_scheduler._LRScheduler,
                device: str):
 
     # Put the model in train mode.
@@ -42,7 +45,8 @@ def train_step(model: torch.nn.Module,
         # Step the optimizer.
         optimizer.step()
 
-        # TODO: learning rate scheduler.
+        # Step the learning rate scheduler.
+        scheduler.step()
 
         # Calculate accuracy metric.
         y_pred_cls = torch.argmax(torch.softmax(y_pred, dim=1), dim=1)
