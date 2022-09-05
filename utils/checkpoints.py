@@ -35,5 +35,5 @@ class BestAndLastCheckpoints:
             }
 
     def save(self, path: Path) -> None:
-        torch.save(self.last_info, f"{path}/last.pt")
-        torch.save(self.best_info, f"{path}/best.pt")
+        torch.save(self.last_info, f"{path}/last_epoch_{self.last_info['epoch']}.pt")
+        torch.save(self.best_info, f"{path}/best_epoch_{self.best_info['epoch']}.pt")

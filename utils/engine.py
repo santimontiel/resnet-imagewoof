@@ -45,9 +45,6 @@ def train_step(model: torch.nn.Module,
         # Step the optimizer.
         optimizer.step()
 
-        # Step the learning rate scheduler.
-        scheduler.step()
-
         # Calculate accuracy metric.
         y_pred_cls = torch.argmax(torch.softmax(y_pred, dim=1), dim=1)
         train_acc += (y_pred_cls == y).sum().item() / len(y_pred)
@@ -56,7 +53,11 @@ def train_step(model: torch.nn.Module,
     train_loss = train_loss / len(dataloader)
     train_acc = train_acc / len(dataloader)
 
-    return train_loss, train_acc
+    # Step the learning rate scheduler.
+    scheduler.step()
+    eta = scheduler.get_last_lr()[0]
+
+    return train_loss, train_acc, eta
 
 
 def test_step(model: torch.nn.Module,

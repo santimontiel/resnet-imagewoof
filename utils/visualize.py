@@ -7,6 +7,7 @@ from matplotlib.ticker import MaxNLocator
 
 from typing import Dict
 
+
 def plot_dataset_batch(dataset: Dataset):
     """
     """
@@ -47,6 +48,22 @@ def plot_metrics(results: Dict[str, float], path: str, day: str, hour: str) -> N
     fig.savefig(path)
 
     return fig
+
+
+def plot_learning_rate(results: Dict[str, float], path: str, day: str, hour: str) -> None:
+
+    sns.set_theme()
+
+    # Create a simple plot
+    fig, ax = plt.subplots()
+    ax.plot(results["learning_rate"])
+    ax.set_title("Learning rate evolution", fontsize=12)
+    ax.set_xlabel("Epochs")
+    ax.set_ylabel("Learning rate")
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+    fig.savefig(path)
+
 
 class Colors:
     HEADER = '\033[95m'

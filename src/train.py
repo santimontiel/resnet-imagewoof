@@ -20,12 +20,11 @@ if ROOT not in sys.path:
     sys.path.append(str(ROOT))
 
 # Modules imports (once path is solved).
-from utils.models import resnet50_imagewoof
+from utils.models import resnet18_imagewoof
 from utils.config import config1 as cfg
 from utils.engine import train_step, test_step
 from utils.dataset import image_woof_train_dataloader, image_woof_test_dataloader
-from utils.visualize import Colors as c
-from utils.visualize import plot_metrics
+from utils.visualize import Colors as c, plot_learning_rate, plot_metrics
 from utils.checkpoints import BestAndLastCheckpoints
 
 
@@ -48,6 +47,7 @@ def run(model: torch.nn.Module,
         "train_acc": [],
         "test_loss": [],
         "test_acc": [],
+        "learning_rate": [],
     }
 
     # For every epoch, loop through train and test steps.
@@ -59,7 +59,7 @@ def run(model: torch.nn.Module,
                       dynamic_ncols=True):
 
         # First, train step.
-        train_loss, train_acc = train_step(
+        train_loss, train_acc, eta = train_step(
             model=model,
             dataloader=train_dataloader,
             loss_fn=loss_fn,
@@ -85,10 +85,11 @@ def run(model: torch.nn.Module,
         # Update the results tracking dictionary.
         results["train_loss"].append(train_loss)
         results["train_acc"].append(train_acc)
+        results["learning_rate"].append(eta)
         results["test_loss"].append(test_loss)
         results["test_acc"].append(test_acc)
 
-    return results, ckpts
+    return results, ckpts, model, optimizer
 
 def main():
 
@@ -120,8 +121,7 @@ def main():
     )
 
     # Load a model from the dispatcher.
-    model = resnet50_imagewoof()
-    model.to(device=DEVICE)
+    model = resnet18_imagewoof().to(device=DEVICE)
 
     # Set up the loss function and the optimizer.
     loss_fn = nn.CrossEntropyLoss()
@@ -134,14 +134,14 @@ def main():
 
     # Let's train!
     start_time = timer()
-    (results, ckpts) = run(model=model,
-                train_dataloader=train_dataloader,
-                test_dataloader=test_dataloader,
-                optimizer=optimizer,
-                scheduler=scheduler,
-                loss_fn=loss_fn,
-                epochs=cfg["NUM_EPOCHS"],
-                device=DEVICE,
+    (results, ckpts, model, optimizer) = run(model=model,
+                                             train_dataloader=train_dataloader,
+                                             test_dataloader=test_dataloader,
+                                             optimizer=optimizer,
+                                             scheduler=scheduler,
+                                             loss_fn=loss_fn,
+                                             epochs=cfg["NUM_EPOCHS"],
+                                             device=DEVICE,
     )
 
     # End the timer and print out how long it took
@@ -154,7 +154,7 @@ def main():
     hour = f"{str(date.hour).zfill(2)}_{str(date.minute).zfill(2)}"
 
     # Save the metrics and losses as png and csv.
-    res_dir = (Path().cwd() / "results" / f"run_{day}_{hour}_train")
+    res_dir = (Path().cwd() / "runs" / f"{day}_{hour}_train" / "results")
     res_dir.mkdir(parents=True, exist_ok=True)
     res_png = plot_metrics(
         results=results,
@@ -164,9 +164,19 @@ def main():
     res_df = pd.DataFrame(results).to_csv(f"{res_dir}/results.csv")
 
     # Save the last and the best weights.
-    ckpts_dir = (Path().cwd() / "weights" / f"run_{day}_{hour}_train")
+    ckpts_dir = (Path().cwd() / "runs" / f"{day}_{hour}_train" / "checkpoints")
     ckpts_dir.mkdir(parents=True, exist_ok=True)
     ckpts.save(path=ckpts_dir)
+
+    # Save the state of the run: learning rate evolution and state dicts.
+    state_dir = (Path().cwd() / "runs" / f"{day}_{hour}_train" / "state")
+    state_dir.mkdir(parents=True, exist_ok=True)
+    lr_plot = plot_learning_rate(
+        results=results,
+        path=f"{state_dir}/learning_rate.png",
+        day=f"{str(date.day).zfill(2)}/{str(date.month).zfill(2)}/{date.year}",
+        hour=f"{str(date.hour).zfill(2)}:{str(date.minute).zfill(2)}")
+
 
 
 if __name__ == "__main__":

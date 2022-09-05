@@ -1,6 +1,6 @@
 # -- REPO-SPECIFIC IGNORES.
-results/
-weights/
+runs/*
+!runs/README.md
 
 # -- ORIGINAL PYTHON TEMPLATE (by GitHub).
 # Byte-compiled / optimized / DLL files
