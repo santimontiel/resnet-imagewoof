@@ -3,6 +3,14 @@ from tqdm.auto import tqdm
 
 # @TODO: Training engine.
 
+def get_lr_from_optimizer(optimizer: torch.optim.Optimizer) -> float:
+    for param_group in optimizer.param_groups:
+        return param_group['lr']
+
+def get_lr_from_scheduler(scheduler: torch.optim.lr_scheduler._LRScheduler) -> float:
+    return scheduler.get_last_lr()[0]
+
+
 def train_step(model: torch.nn.Module,
                dataloader: torch.utils.data.DataLoader,
                loss_fn: torch.nn.Module,
@@ -54,8 +62,11 @@ def train_step(model: torch.nn.Module,
     train_acc = train_acc / len(dataloader)
 
     # Step the learning rate scheduler.
-    scheduler.step()
-    eta = scheduler.get_last_lr()[0]
+    if scheduler is not None:
+        scheduler.step()
+        eta = get_lr_from_scheduler(scheduler)
+    else:
+        eta = get_lr_from_optimizer(optimizer)
 
     return train_loss, train_acc, eta
 
@@ -100,4 +111,5 @@ def test_step(model: torch.nn.Module,
     test_loss = test_loss / len(dataloader)
     test_acc = test_acc / len(dataloader)
 
-    return test_loss, test_acc 
+    return test_loss, test_acc
+

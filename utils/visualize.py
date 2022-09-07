@@ -5,7 +5,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-from typing import Dict
+from typing import Dict, List
 
 
 def plot_dataset_batch(dataset: Dataset):
@@ -15,7 +15,7 @@ def plot_dataset_batch(dataset: Dataset):
     pass
 
 
-def plot_metrics(results: Dict[str, float], path: str, day: str, hour: str) -> None:
+def plot_train_metrics(results: Dict[str, float], path: str, day: str, hour: str) -> None:
     # @TODO: Split subplots to store it.
     # @TODO: Dynamic name to store figures.
 
@@ -41,7 +41,7 @@ def plot_metrics(results: Dict[str, float], path: str, day: str, hour: str) -> N
     axd["metrics"].xaxis.set_major_locator(MaxNLocator(integer=True))
 
     # Suptitle.
-    suptitle = f"ResNet-ImageWoof: Losses and accuracy.\nExperiment: Day {day}, Hour {hour}"
+    suptitle = f"ResNet-ImageWoof: Training losses and accuracy.\nExperiment: Day {day}, Hour {hour}"
     fig.suptitle(suptitle, fontweight="bold")
 
     # Save it to results folder.
@@ -63,6 +63,35 @@ def plot_learning_rate(results: Dict[str, float], path: str, day: str, hour: str
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     fig.savefig(path)
+
+
+def plot_val_metrics(loss: List[float], acc: List[float], path: str, day: str, hour: str) -> None:
+
+        # Create a mosaic with two figures: losses and metrics.
+    fig, axd = plt.subplot_mosaic([
+        ["loss", "metrics"]
+    ], figsize=(10,5), constrained_layout=True)
+
+    # Losses plot.
+    axd["loss"].plot(loss, label="Validation loss")
+    axd["loss"].set_title("Losses", fontsize=12)
+    axd["loss"].legend()
+    axd["loss"].xaxis.set_major_locator(MaxNLocator(integer=True))
+
+    # Metrics plots.
+    axd["metrics"].plot(acc, label="Validation acc")
+    axd["metrics"].set_title("Accuracy", fontsize=12)
+    axd["metrics"].legend()
+    axd["metrics"].xaxis.set_major_locator(MaxNLocator(integer=True))
+
+    # Suptitle.
+    suptitle = f"ResNet-ImageWoof: Validation losses and accuracy.\nExperiment: Day {day}, Hour {hour}"
+    fig.suptitle(suptitle, fontweight="bold")
+
+    # Save it to results folder.
+    fig.savefig(path)
+
+    return fig
 
 
 class Colors:

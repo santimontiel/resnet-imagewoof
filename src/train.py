@@ -19,12 +19,12 @@ ROOT = FILE.parents[1]
 if ROOT not in sys.path:
     sys.path.append(str(ROOT))
 
-# Modules imports (once path is solved).
-from utils.models import resnet18_imagewoof
-from utils.config import config1 as cfg
+# Repo imports (once path is solved).
+from utils.models import resnet18_imagewoof as model_cls
+from utils.config import config_train_1 as cfg
 from utils.engine import train_step, test_step
 from utils.dataset import image_woof_train_dataloader, image_woof_test_dataloader
-from utils.visualize import Colors as c, plot_learning_rate, plot_metrics
+from utils.visualize import Colors as c, plot_learning_rate, plot_train_metrics
 from utils.checkpoints import BestAndLastCheckpoints
 
 
@@ -121,7 +121,7 @@ def main():
     )
 
     # Load a model from the dispatcher.
-    model = resnet18_imagewoof().to(device=DEVICE)
+    model = model_cls().to(device=DEVICE)
 
     # Set up the loss function and the optimizer.
     loss_fn = nn.CrossEntropyLoss()
@@ -156,7 +156,7 @@ def main():
     # Save the metrics and losses as png and csv.
     res_dir = (Path().cwd() / "runs" / f"{day}_{hour}_train" / "results")
     res_dir.mkdir(parents=True, exist_ok=True)
-    res_png = plot_metrics(
+    res_png = plot_train_metrics(
         results=results,
         path=f"{res_dir}/results.png",
         day=f"{str(date.day).zfill(2)}/{str(date.month).zfill(2)}/{date.year}",
