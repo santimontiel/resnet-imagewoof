@@ -22,8 +22,7 @@ from utils.config import config_test_1 as cfg
 from utils.dataset import image_woof_test_dataloader
 from utils.models import resnet18_imagewoof as model_cls
 from utils.engine import test_step
-from utils.visualize import plot_val_metrics
-
+from utils.serialize import serial_val_results
 
 def run(model: torch.nn.Module,
         test_dataloader: torch.utils.data.DataLoader,
@@ -65,7 +64,8 @@ def main():
 
     # Load the model and the checkpoint.
     model = model_cls().to(DEVICE)
-    model.load_state_dict(torch.load(cfg["PATH_TO_MODEL"]))
+    model_state_dict = (torch.load(cfg["PATH_TO_MODEL"])).get("model_state_dict")
+    model.load_state_dict(model_state_dict)
 
     # Let's validate.
     start_time = timer()
@@ -77,7 +77,7 @@ def main():
 
     # End the timer and print out how long it took
     end_time = timer()
-    print(f"Total training time: {timedelta(seconds=end_time-start_time)} hours.")
+    print(f"Total validation time: {timedelta(seconds=end_time-start_time)} hours.")
     
     # Get day and hour information to store results.
     date = datetime.now()
@@ -87,10 +87,8 @@ def main():
     # Save the metrics and losses as png and csv.
     res_dir = (Path().cwd() / "runs" / f"{day}_{hour}_val" / "results")
     res_dir.mkdir(parents=True, exist_ok=True)
-    res_png = plot_val_metrics(
-        loss=loss,
-        acc=acc,
-        path=f"{res_dir}/results.png",
-        day=f"{str(date.day).zfill(2)}/{str(date.month).zfill(2)}/{date.year}",
-        hour=f"{str(date.hour).zfill(2)}:{str(date.minute).zfill(2)}")
+    serial_val_results(res_dir, loss, acc)
 
+
+if __name__ == "__main__":
+    main()
